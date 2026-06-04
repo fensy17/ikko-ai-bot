@@ -21,7 +21,7 @@ class IikoClient:
         return {"Authorization": f"Bearer {self.token}"}
 
     def get_organizations(self):
-        url = f"{IIKO_BASE_URL}/api/1/organizations"
+        url = f"{IIKO_BASE_URL}/api/v2/organizations"
         response = requests.post(url, headers=self.headers(), json={}, timeout=30)
 
         if response.status_code == 401:

@@ -8,22 +8,14 @@ self.base_url = os.getenv(
 "IIKO_BASE_URL",
 "https://api-ru.iiko.services"
 )
-
-    self.token = None
-
-    if not self.api_key:
-        raise ValueError("Не задана переменная IIKO_API_KEY")
+self.token = None
 
 def get_token(self):
     url = f"{self.base_url}/api/v2/access_token"
 
-    payload = {
-        "apiKey": self.api_key
-    }
-
     response = requests.post(
         url,
-        json=payload,
+        json={"apiKey": self.api_key},
         timeout=30
     )
 
@@ -56,16 +48,6 @@ def post(self, endpoint, payload=None):
         json=payload or {},
         timeout=30
     )
-
-    if response.status_code == 401:
-        self.get_token()
-
-        response = requests.post(
-            url,
-            headers=self.headers(),
-            json=payload or {},
-            timeout=30
-        )
 
     response.raise_for_status()
 

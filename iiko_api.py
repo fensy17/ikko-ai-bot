@@ -2,45 +2,63 @@ import os
 import requests
 
 class IikoClient:
-    def __init__(self):
-        self.client_id = os.getenv("IIKO_CLIENT_ID")
-        self.client_secret = os.getenv("IIKO_CLIENT_SECRET")
-        self.base_url = os.getenv(
-            "IIKO_BASE_URL",
-            "https://api-ru.iiko.services"
-        )
+def init(self):
+self.api_key = os.getenv("IIKO_API_KEY")
+self.base_url = os.getenv(
+"IIKO_BASE_URL",
+"https://api-ru.iiko.services"
+)
 
-        self.token = None
+    self.token = None
 
-        if not self.client_id:
-            raise ValueError("Не задан IIKO_CLIENT_ID")
+    if not self.api_key:
+        raise ValueError("Не задана переменная IIKO_API_KEY")
 
-        if not self.client_secret:
-            raise ValueError("Не задан IIKO_CLIENT_SECRET")
-
-    def get_token(self):
+def get_token(self):
     url = f"{self.base_url}/api/v2/access_token"
+
+    payload = {
+        "apiKey": self.api_key
+    }
 
     response = requests.post(
         url,
-        json={"apiKey": self.api_key},
+        json=payload,
         timeout=30
     )
 
     response.raise_for_status()
-    self.token = response.json()["token"]
+
+    data = response.json()
+
+    self.token = data.get("token")
+
+    if not self.token:
+        raise Exception(f"Не удалось получить токен: {data}")
+
     return self.token
-    def headers(self):
-        if not self.token:
-            self.get_token()
 
-        return {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
+def headers(self):
+    if not self.token:
+        self.get_token()
 
-    def post(self, endpoint, payload=None):
-        url = f"{self.base_url}{endpoint}"
+    return {
+        "Authorization": f"Bearer {self.token}",
+        "Content-Type": "application/json"
+    }
+
+def post(self, endpoint, payload=None):
+    url = f"{self.base_url}{endpoint}"
+
+    response = requests.post(
+        url,
+        headers=self.headers(),
+        json=payload or {},
+        timeout=30
+    )
+
+    if response.status_code == 401:
+        self.get_token()
 
         response = requests.post(
             url,
@@ -49,19 +67,13 @@ class IikoClient:
             timeout=30
         )
 
-        if response.status_code == 401:
-            self.get_token()
+    response.raise_for_status()
 
-            response = requests.post(
-                url,
-                headers=self.headers(),
-                json=payload or {},
-                timeout=30
-            )
+    return response.json()
 
-        response.raise_for_status()
+def get_organizations(self):
+    return self.post("/api/1/organizations")
 
-        return response.json()
 
-    def get_organizations(self):
-        return self.post("/api/1/organizations")
+
+

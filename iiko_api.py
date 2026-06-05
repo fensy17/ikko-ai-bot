@@ -6,15 +6,9 @@ class IikoClient:
         self.api_key = os.getenv("IIKO_API_KEY")
         self.app_id = os.getenv("IIKO_APP_ID")
         self.client_secret = os.getenv("IIKO_CLIENT_SECRET")
+        self.org_id = os.getenv("IIKO_ORG_ID")
         self.base_url = os.getenv("IIKO_BASE_URL", "https://api-ru.iiko.services")
         self.token = None
-
-        if not self.api_key:
-            raise ValueError("Не задан IIKO_API_KEY")
-        if not self.app_id:
-            raise ValueError("Не задан IIKO_APP_ID")
-        if not self.client_secret:
-            raise ValueError("Не задан IIKO_CLIENT_SECRET")
 
     def get_token(self):
         url = f"{self.base_url}/api/v2/access_token"
@@ -30,16 +24,9 @@ class IikoClient:
         )
 
         if response.status_code != 200:
-            raise Exception(
-                f"Ошибка получения токена: {response.status_code} {response.text}"
-            )
+            raise Exception(f"Ошибка получения токена: {response.status_code} {response.text}")
 
-        data = response.json()
-        self.token = data.get("token")
-
-        if not self.token:
-            raise Exception(f"Токен не найден в ответе: {data}")
-
+        self.token = response.json().get("token")
         return self.token
 
     def headers(self):
@@ -70,8 +57,24 @@ class IikoClient:
                 timeout=30
             )
 
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(f"Ошибка iiko: {response.status_code} {response.text}")
+
         return response.json()
 
     def get_organizations(self):
         return self.post("/api/1/organizations")
+
+    def get_nomenclature(self):
+        return self.post("/api/1/nomenclature", {
+            "organizationId": self.org_id
+        })
+
+    def get_stoplist(self):
+        return self.post("/api/1/stop_lists", {
+            "organizationIds": [self.org_id]
+        })
+
+
+
+

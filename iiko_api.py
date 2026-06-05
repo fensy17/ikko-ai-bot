@@ -19,30 +19,17 @@ class IikoClient:
             raise ValueError("Не задан IIKO_CLIENT_SECRET")
 
     def get_token(self):
-        url = f"{self.base_url}/api/v2/access_token"
+    url = f"{self.base_url}/api/v2/access_token"
 
-        payload = {
-            "clientId": self.client_id,
-            "clientSecret": self.client_secret
-        }
+    response = requests.post(
+        url,
+        json={"apiKey": self.api_key},
+        timeout=30
+    )
 
-        response = requests.post(
-            url,
-            json=payload,
-            timeout=30
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        self.token = data.get("token")
-
-        if not self.token:
-            raise Exception(f"Не удалось получить токен: {data}")
-
-        return self.token
-
+    response.raise_for_status()
+    self.token = response.json()["token"]
+    return self.token
     def headers(self):
         if not self.token:
             self.get_token()

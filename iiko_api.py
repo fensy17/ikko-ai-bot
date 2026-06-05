@@ -16,14 +16,23 @@ class IikoClient:
             timeout=30
         )
 
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(
+                f"Ошибка получения токена: {response.status_code} {response.text}"
+            )
+
         data = response.json()
         self.token = data.get("token")
 
         if not self.token:
-            raise Exception(f"Не удалось получить токен: {data}")
+            raise Exception(f"Токен не найден в ответе: {data}")
 
         return self.token
+
+
+
+
+
 
     def headers(self):
         if not self.token:

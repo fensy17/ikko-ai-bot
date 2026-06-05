@@ -20,10 +20,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "AI-ассистент iiko запущен.\n\n"
         "Команды:\n"
         "/start — запуск\n"
-        "/iiko — проверить подключение к iiko\n\n"
-        "Можно писать обычным текстом:\n"
-        "Покажи мои организации iiko\n"
-        "Что ты умеешь?"
+        "/iiko — проверить подключение к iiko\n"
+        "/orgs — показать организации\n"
+        "/menu — показать номенклатуру\n"
+        "/stoplist — показать стоп-лист\n\n"
+        "Также можно писать обычным текстом."
     )
 
 async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -45,23 +46,20 @@ async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка iiko API: {e}")
 
-async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def orgs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        user_text = update.message.text
-        answer = ask_agent(user_text)
-        await update.message.reply_text(answer[:4000])
+        data = iiko.get_organizations()
+        orgs = data.get("organizations", [])
 
-    except Exception as e:
-        await update.message.reply_text(f"Ошибка ассистента: {e}")
+        if not orgs:
+            await update.message.reply_text("Организации не найдены.")
+            return
 
-def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+        text = "Организации:\n\n"
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("iiko", iiko_check))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+        for org in orgs:
+            text += f"- {org.get('name')} |
 
-    app.run_polling()
 
-if __name__ == "__main__":
-    main()
+
+

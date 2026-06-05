@@ -2,7 +2,7 @@ import os
 import requests
 
 class IikoClient:
-def init(self):
+    def init(self):
 self.api_key = os.getenv("IIKO_API_KEY")
 self.base_url = os.getenv(
 "IIKO_BASE_URL",

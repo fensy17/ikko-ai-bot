@@ -4,15 +4,25 @@ import requests
 class IikoClient:
     def __init__(self):
         self.api_key = os.getenv("IIKO_API_KEY")
+        self.client_secret = os.getenv("IIKO_CLIENT_SECRET")
         self.base_url = os.getenv("IIKO_BASE_URL", "https://api-ru.iiko.services")
         self.token = None
+
+        if not self.api_key:
+            raise ValueError("Не задана переменная IIKO_API_KEY")
+
+        if not self.client_secret:
+            raise ValueError("Не задана переменная IIKO_CLIENT_SECRET")
 
     def get_token(self):
         url = f"{self.base_url}/api/v2/access_token"
 
         response = requests.post(
             url,
-            json={"apiKey": self.api_key},
+            json={
+                "apiKey": self.api_key,
+                "clientSecret": self.client_secret
+            },
             timeout=30
         )
 
@@ -28,11 +38,6 @@ class IikoClient:
             raise Exception(f"Токен не найден в ответе: {data}")
 
         return self.token
-
-
-
-
-
 
     def headers(self):
         if not self.token:
@@ -52,6 +57,15 @@ class IikoClient:
             json=payload or {},
             timeout=30
         )
+
+        if response.status_code == 401:
+            self.get_token()
+            response = requests.post(
+                url,
+                headers=self.headers(),
+                json=payload or {},
+                timeout=30
+            )
 
         response.raise_for_status()
         return response.json()

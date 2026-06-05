@@ -142,10 +142,7 @@ class IikoClient:
             "organizationIds": [self.org_id]
         })
 
-    # Доставочны
-
-
-е ограничения
+    # Доставочные ограничения
     def get_delivery_restrictions(self):
         return self.post("/api/1/delivery_restrictions", {
             "organizationIds": [self.org_id]

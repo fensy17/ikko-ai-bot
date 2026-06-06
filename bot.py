@@ -32,7 +32,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/iiko — проверить подключение\n"
         "/orgs — организации\n"
         "/menu — номенклатура\n"
-        "/products — диагностика номенклатуры\n"
+        "/products — диагностика товаров\n"
+        "/cloudmenu — проверка внешнего меню\n"
         "/search название — поиск товара\n"
         "/stoplist — стоп-лист\n\n"
         "Отчёты Excel:\n"
@@ -73,21 +74,20 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
         products = data.get("products", [])
+        categories = data.get("productCategories", [])
 
         if not products:
-            await update.message.reply_text(
-                "Номенклатура не найдена.\n\n"
-                "Список products пустой.\n"
-                "Для диагностики отправь /products."
-            )
+            text = "Номенклатура не найдена.\n\n"
+            text += f"Категорий найдено: {len(categories)}\n"
+            text += "Список products пустой.\n\n"
+            text += "Проверь /cloudmenu — так мы поймём, есть ли внешнее меню."
+            await update.message.reply_text(text[:4000])
             return
 
         text = f"Номенклатура iiko: {len(products)} позиций\n\n"
 
         for item in products[:80]:
-            name = item.get("name", "Без названия")
-            item_type = item.get("type", "без типа")
-            text += f"- {name} ({item_type})\n"
+            text += f"- {item.get('name', 'Без названия')} ({item.get('type', 'без типа')})\n"
 
         if len(products) > 80:
             text += f"\nПоказано 80 из {len(products)} позиций."
@@ -101,12 +101,53 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
-        text = str(data)
+
+        products = data.get("products", [])
+        categories = data.get("productCategories", [])
+        groups = data.get("groups", [])
+        sizes = data.get("sizes", [])
+
+        if not products:
+            text = "Товары не найдены.\n\n"
+            text += f"Категории: {len(categories)}\n"
+            text += f"Группы: {len(groups)}\n"
+            text += f"Товары: {len(products)}\n"
+            text += f"Размеры: {len(sizes)}\n\n"
+
+            if categories:
+                text += "Категории:\n"
+                for category in categories[:20]:
+                    text += f"• {category.get('name')}\n"
+
+            text += (
+                "\nCloud API подключен, но products пустой.\n"
+                "Следующая проверка: /cloudmenu"
+            )
+
+            await update.message.reply_text(text[:4000])
+            return
+
+        text = f"Найдено товаров: {len(products)}\n\n"
+
+        for item in products[:100]:
+            text += f"• {item.get('name', 'Без названия')}\n"
+
+        if len(products) > 100:
+            text += f"\nПоказано 100 из {len(products)} товаров."
 
         await update.message.reply_text(text[:4000])
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")
+
+
+async def cloudmenu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        data = iiko.get_cloud_menu()
+        await update.message.reply_text(str(data)[:4000])
+
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /cloudmenu: {e}")
 
 
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -137,9 +178,6 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"  ID: {item.get('id')}\n"
                 f"  Тип: {item.get('type')}\n\n"
             )
-
-        if len(found) > 50:
-            text += f"Показано 50 из {len(found)} результатов."
 
         await update.message.reply_text(text[:4000])
 
@@ -239,6 +277,7 @@ def main():
     app.add_handler(CommandHandler("orgs", orgs_command))
     app.add_handler(CommandHandler("menu", menu_command))
     app.add_handler(CommandHandler("products", products_command))
+    app.add_handler(CommandHandler("cloudmenu", cloudmenu_command))
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("stoplist", stoplist_command))
 

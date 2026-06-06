@@ -29,20 +29,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "AI-ассистент iiko запущен.\n\n"
         "Команды:\n"
-        "/start — запуск\n"
         "/iiko — проверить подключение\n"
         "/orgs — организации\n"
         "/menu — номенклатура\n"
-        "/products — диагностика номенклатуры\n"
+        "/products — товары\n"
         "/search название — поиск товара\n"
         "/stoplist — стоп-лист\n\n"
         "Отчёты Excel:\n"
         "/report — общая выручка\n"
         "/top — топ продаж\n"
-        "/profit — самые прибыльные позиции\n"
+        "/profit — прибыльные позиции\n"
         "/worst — слабые продажи\n"
         "/analysis — полный анализ\n\n"
-        "Также можно просто отправить Excel-файл отчёта в чат."
+        "Также можно отправить Excel-файл отчёта."
     )
 
 
@@ -78,7 +77,8 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not products:
             await update.message.reply_text(
                 "Номенклатура не найдена.\n\n"
-                "Для диагностики отправь команду /products — она покажет сырой ответ iiko."
+                "Cloud API отвечает, но список products пустой.\n"
+                "Проверь настройку «Внешнее меню» в iiko."
             )
             return
 
@@ -101,7 +101,37 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
-        await update.message.reply_text(str(data)[:4000])
+
+        products = data.get("products", [])
+        categories = data.get("productCategories", [])
+
+        if not products:
+            text = "Товары не найдены.\n\n"
+
+            if categories:
+                text += f"Найдено категорий: {len(categories)}\n\n"
+
+                for category in categories:
+                    text += f"• {category.get('name')}\n"
+
+            text += (
+                "\nCloud API подключен корректно.\n"
+                "Категории загружаются, но позиции меню отсутствуют.\n\n"
+                "Проверь настройку «Внешнее меню» в iiko."
+            )
+
+            await update.message.reply_text(text[:4000])
+            return
+
+        text = f"Найдено товаров: {len(products)}\n\n"
+
+        for item in products[:100]:
+            text += f"• {item.get('name', 'Без названия')}\n"
+
+        if len(products) > 100:
+            text += f"\nПоказано 100 из {len(products)} товаров."
+
+        await update.message.reply_text(text[:4000])
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")

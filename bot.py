@@ -240,28 +240,26 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Ошибка ассистента: {e}")
 
 def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("iiko", iiko_check))
+app.add_handler(CommandHandler("orgs", orgs_command))
+app.add_handler(CommandHandler("menu", menu_command))
+app.add_handler(CommandHandler("products", products_command))
+app.add_handler(CommandHandler("search", search_command))
+app.add_handler(CommandHandler("stoplist", stoplist_command))
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("iiko", iiko_check))
-    app.add_handler(CommandHandler("orgs", orgs_command))
-    app.add_handler(CommandHandler("menu", menu_command))
-    app.add_handler(CommandHandler("products", products_command))
-    app.add_handler(CommandHandler("search", search_command))
-    app.add_handler(CommandHandler("stoplist", stoplist_command))
+app.add_handler(CommandHandler("report", report_command))
+app.add_handler(CommandHandler("top", top_command))
+app.add_handler(CommandHandler("profit", profit_command))
+app.add_handler(CommandHandler("worst", worst_command))
+app.add_handler(CommandHandler("analysis", analysis_command))
 
-    app.add_handler(CommandHandler("re
-
-
-port", report_command))
-    app.add_handler(CommandHandler("top", top_command))
-    app.add_handler(CommandHandler("profit", profit_command))
-    app.add_handler(CommandHandler("worst", worst_command))
-    app.add_handler(CommandHandler("analysis", analysis_command))
-
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-
-    app.run_polling()
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        chat
+    )
+)
 
 if __name__ == "__main__":
     main()

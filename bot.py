@@ -52,7 +52,6 @@ async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         text = "iiko Cloud API подключен.\n\nОрганизации:\n"
-
         for org in orgs:
             text += f"- {org.get('name')} | ID: {org.get('id')}\n"
 
@@ -62,23 +61,7 @@ async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Ошибка iiko API: {e}")
 
 async def orgs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        data = iiko.get_organizations()
-        orgs = data.get("organizations", [])
-
-        if not orgs:
-            await update.message.reply_text("Организации не найдены.")
-            return
-
-        text = "Организации:\n\n"
-
-        for org in orgs:
-            text += f"- {org.get('name')} | ID: {org.get('id')}\n"
-
-        await update.message.reply_text(text[:4000])
-
-    except Exception as e:
-        await update.message.reply_text(f"Ошибка /orgs: {e}")
+    await iiko_check(update, context)
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -109,10 +92,7 @@ async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = iiko.get_nomenclature()
         products = data.get("products", [])
 
-        only_products = [
-            item for item in products
-            if item.get("type") == "Product"
-        ]
+        only_products = [item for item in products if item.get("type") == "Product"]
 
         if not only_products:
             await update.message.reply_text("Товары не найдены.")
@@ -131,10 +111,7 @@ async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")
 
-async def search_command(update: Update, context: ContextType
-
-
-s.DEFAULT_TYPE):
+async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = " ".join(context.args).strip().lower()
 
@@ -151,7 +128,10 @@ s.DEFAULT_TYPE):
         ]
 
         if not found:
-            await update.message.reply_text("Ничего не найдено.")
+            await update.message.reply_text("Нич
+
+
+его не найдено.")
             return
 
         text = f"Найдено по запросу «{query}»: {len(found)}\n\n"
@@ -174,28 +154,7 @@ s.DEFAULT_TYPE):
 async def stoplist_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_stoplist()
-        terminal_groups = data.get("terminalGroupStopLists", [])
-
-        if not terminal_groups:
-            await update.message.reply_text("Стоп-лист пуст или данные не найдены.")
-            return
-
-        text = "Стоп-лист:\n\n"
-        found_items = 0
-
-        for group in terminal_groups:
-            items = group.get("items", [])
-
-            for item in items:
-                product_id = item.get("productId")
-                balance = item.get("balance")
-                text += f"- productId: {product_id}, остаток: {balance}\n"
-                found_items += 1
-
-        if found_items == 0:
-            text = "Стоп-лист пуст."
-
-        await update.message.reply_text(text[:4000])
+        await update.message.reply_text(str(data)[:4000])
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка /stoplist: {e}")
@@ -240,26 +199,25 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Ошибка ассистента: {e}")
 
 def main():
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("iiko", iiko_check))
-app.add_handler(CommandHandler("orgs", orgs_command))
-app.add_handler(CommandHandler("menu", menu_command))
-app.add_handler(CommandHandler("products", products_command))
-app.add_handler(CommandHandler("search", search_command))
-app.add_handler(CommandHandler("stoplist", stoplist_command))
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
 
-app.add_handler(CommandHandler("report", report_command))
-app.add_handler(CommandHandler("top", top_command))
-app.add_handler(CommandHandler("profit", profit_command))
-app.add_handler(CommandHandler("worst", worst_command))
-app.add_handler(CommandHandler("analysis", analysis_command))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("iiko", iiko_check))
+    app.add_handler(CommandHandler("orgs", orgs_command))
+    app.add_handler(CommandHandler("menu", menu_command))
+    app.add_handler(CommandHandler("products", products_command))
+    app.add_handler(CommandHandler("search", search_command))
+    app.add_handler(CommandHandler("stoplist", stoplist_command))
 
-app.add_handler(
-    MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        chat
-    )
-)
+    app.add_handler(CommandHandler("report", report_command))
+    app.add_handler(CommandHandler("top", top_command))
+    app.add_handler(CommandHandler("profit", profit_command))
+    app.add_handler(CommandHandler("worst", worst_command))
+    app.add_handler(CommandHandler("analysis", analysis_command))
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+
+    app.run_polling()
 
 if __name__ == "__main__":
     main()

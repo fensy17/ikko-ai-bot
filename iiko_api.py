@@ -86,12 +86,15 @@ class IikoClient:
     def get_nomenclature(self):
         if not self.org_id:
             raise Exception("Не задан IIKO_ORG_ID в Railway Variables")
-            
-            return self.post("/api/1/nomenclature", {
-        "organizationId": self.org_id,
-        "startRevision": 0
-    })
 
+    return self.post(
+        "/api/1/nomenclature",
+        {
+            "organizationId": self.org_id,
+            "startRevision": 0
+        }
+    )
+    
     # Стоп-лист
     def get_stoplist(self):
         return self.post("/api/1/stop_lists", {

@@ -33,7 +33,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/iiko — проверить подключение\n"
         "/orgs — организации\n"
         "/menu — номенклатура\n"
-        "/products — товары\n"
+        "/products — диагностика номенклатуры\n"
         "/search название — поиск товара\n"
         "/stoplist — стоп-лист\n\n"
         "Отчёты Excel:\n"
@@ -78,9 +78,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not products:
             await update.message.reply_text(
                 "Номенклатура не найдена.\n\n"
-                "Проверь в Railway Variables:\n"
-                "IIKO_ORG_ID=9b0a56a3-d69c-4160-9b38-0940677b6754\n\n"
-                "Также проверь в iikoWeb, что для точки включена выгрузка справочников в Cloud API."
+                "Для диагностики отправь команду /products — она покажет сырой ответ iiko."
             )
             return
 
@@ -103,26 +101,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
-        products = data.get("products", [])
-
-        if not products:
-            await update.message.reply_text(
-                "Товары не найдены, потому что номенклатура пустая.\n\n"
-                "Проверь IIKO_ORG_ID и выгрузку справочников в Cloud API."
-            )
-            return
-
-        text = f"Товары / позиции меню: {len(products)} позиций\n\n"
-
-        for item in products[:80]:
-            name = item.get("name", "Без названия")
-            item_type = item.get("type", "без типа")
-            text += f"- {name} ({item_type})\n"
-
-        if len(products) > 80:
-            text += f"\nПоказано 80 из {len(products)} позиций."
-
-        await update.message.reply_text(text[:4000])
+        await update.message.reply_text(str(data)[:4000])
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")

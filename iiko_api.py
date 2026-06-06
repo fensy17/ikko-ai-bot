@@ -13,24 +13,26 @@ class IikoClient:
         self.token = None
 
     def get_token(self):
-        if self.token:
-            return self.token
+    if self.token:
+        return self.token
 
-        response = requests.post(
-            f"{self.base_url}/api/1/access_token",
-            json={
-                "apiLogin": self.api_key
-            },
-            timeout=30
+    response = requests.post(
+        f"{self.base_url}/api/v2/access_token",
+        json={
+            "apiKey": self.api_key,
+            "appId": os.getenv("IIKO_APP_ID"),
+            "clientSecret": os.getenv("IIKO_CLIENT_SECRET")
+        },
+        timeout=30
+    )
+
+    if response.status_code != 200:
+        raise Exception(
+            f"Ошибка получения токена: {response.status_code}\n{response.text}"
         )
 
-        if response.status_code != 200:
-            raise Exception(
-                f"Ошибка получения токена: {response.status_code}\n{response.text}"
-            )
-
-        self.token = response.json()["token"]
-        return self.token
+    self.token = response.json()["token"]
+    return self.token
 
     def headers(self):
         return {

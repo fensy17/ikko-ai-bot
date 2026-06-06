@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -39,7 +41,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/profit — самые прибыльные позиции\n"
         "/worst — слабые продажи\n"
         "/analysis — полный анализ\n\n"
-        "Также можно писать обычным текстом."
+        "Также можно просто отправить Excel-файл отчёта в чат."
     )
 
 async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -128,7 +130,9 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         if not found:
-            await update.message.reply_text("Ничего не найдено.")
+
+
+await update.message.reply_text("Ничего не найдено.")
             return
 
         text = f"Найдено по запросу «{query}»: {len(found)}\n\n"
@@ -186,6 +190,35 @@ async def analysis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /analysis: {e}")
 
+async def excel_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        document = update.message.document
+
+        if not document or not document.file_name.lower().endswith(".xlsx"):
+            await update.message.reply_text("Пришли файл Excel в формате .xlsx")
+            return
+
+        reports_dir = Path("reports")
+        reports_dir.mkdir(exist_ok=True)
+
+        file = await context.bot.get_file(document.file_id)
+        file_path = reports_dir / document.file_name
+
+        await file.download_to_drive(str(file_path))
+
+        await update.message.reply_text(
+            "Excel-отчёт загружен.\n\n"
+            "Теперь доступны команды:\n"
+            "/report\n"
+            "/top\n"
+            "/profit\n"
+            "/worst\n"
+            "/analysis"
+        )
+
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка загрузки Excel: {e}")
+
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_text = update.message.text
@@ -209,16 +242,16 @@ def main():
     app.add_handler(CommandHandler("report", report_command))
     app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CommandHandler("profit", profit_command))
-    app.add_handler(CommandHandler("worst", worst_command))
+    app.add_handler(Command
+
+
+Handler("worst", worst_command))
     app.add_handler(CommandHandler("analysis", analysis_command))
 
+    app.add_handler(MessageHandler(filters.Document.FileExtension("xlsx"), excel_upload))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     app.run_polling()
 
 if __name__ == "__main__":
     main()
-
-
-
-

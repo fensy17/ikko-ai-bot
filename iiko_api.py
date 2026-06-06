@@ -8,6 +8,7 @@ class IikoClient:
         self.base_url = "https://api-ru.iiko.services"
 
         self.api_key = os.getenv("IIKO_API_KEY")
+        self.app_id = os.getenv("IIKO_APP_ID")
         self.client_secret = os.getenv("IIKO_CLIENT_SECRET")
         self.org_id = os.getenv("IIKO_ORG_ID")
 
@@ -21,6 +22,7 @@ class IikoClient:
             f"{self.base_url}/api/v2/access_token",
             json={
                 "apiKey": self.api_key,
+                "appId": self.app_id,
                 "clientSecret": self.client_secret
             },
             timeout=30
@@ -60,11 +62,9 @@ class IikoClient:
 
         return response.json()
 
-    # Организации
     def get_organizations(self):
         return self.post("/api/1/organizations")
 
-    # Номенклатура
     def get_nomenclature(self):
         if not self.org_id:
             raise Exception("Не задан IIKO_ORG_ID")
@@ -76,7 +76,6 @@ class IikoClient:
             }
         )
 
-    # Стоп-лист
     def get_stoplist(self):
         if not self.org_id:
             raise Exception("Не задан IIKO_ORG_ID")
@@ -88,7 +87,6 @@ class IikoClient:
             }
         )
 
-    # Типы оплат
     def get_payment_types(self):
         if not self.org_id:
             raise Exception("Не задан IIKO_ORG_ID")
@@ -100,7 +98,6 @@ class IikoClient:
             }
         )
 
-    # Склады
     def get_storages(self):
         if not self.org_id:
             raise Exception("Не задан IIKO_ORG_ID")

@@ -24,6 +24,7 @@ if not TELEGRAM_TOKEN:
 
 iiko = IikoClient()
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "AI-ассистент iiko запущен.\n\n"
@@ -44,6 +45,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Также можно просто отправить Excel-файл отчёта в чат."
     )
 
+
 async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_organizations()
@@ -54,6 +56,7 @@ async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         text = "iiko Cloud API подключен.\n\nОрганизации:\n"
+
         for org in orgs:
             text += f"- {org.get('name')} | ID: {org.get('id')}\n"
 
@@ -62,8 +65,10 @@ async def iiko_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка iiko API: {e}")
 
+
 async def orgs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await iiko_check(update, context)
+
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -71,14 +76,19 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         products = data.get("products", [])
 
         if not products:
-            await update.message.reply_text("Номенклатура не найдена.")
+            await update.message.reply_text(
+                "Номенклатура не найдена.\n\n"
+                "Проверь в Railway Variables:\n"
+                "IIKO_ORG_ID=9b0a56a3-d69c-4160-9b38-0940677b6754\n\n"
+                "Также проверь в iikoWeb, что для точки включена выгрузка справочников в Cloud API."
+            )
             return
 
         text = f"Номенклатура iiko: {len(products)} позиций\n\n"
 
         for item in products[:80]:
             name = item.get("name", "Без названия")
-            item_type = item.get("type", "")
+            item_type = item.get("type", "без типа")
             text += f"- {name} ({item_type})\n"
 
         if len(products) > 80:
@@ -89,29 +99,34 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /menu: {e}")
 
+
 async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
         products = data.get("products", [])
 
-        only_products = [item for item in products if item.get("type") == "Product"]
-
-        if not only_products:
-            await update.message.reply_text("Товары не найдены.")
+        if not products:
+            await update.message.reply_text(
+                "Товары не найдены, потому что номенклатура пустая.\n\n"
+                "Проверь IIKO_ORG_ID и выгрузку справочников в Cloud API."
+            )
             return
 
-        text = f"Товары: {len(only_products)} позиций\n\n"
+        text = f"Товары / позиции меню: {len(products)} позиций\n\n"
 
-        for item in only_products[:80]:
-            text += f"- {item.get('name', 'Без названия')}\n"
+        for item in products[:80]:
+            name = item.get("name", "Без названия")
+            item_type = item.get("type", "без типа")
+            text += f"- {name} ({item_type})\n"
 
-        if len(only_products) > 80:
-            text += f"\nПоказано 80 из {len(only_products)} товаров."
+        if len(products) > 80:
+            text += f"\nПоказано 80 из {len(products)} позиций."
 
         await update.message.reply_text(text[:4000])
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")
+
 
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -150,6 +165,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /search: {e}")
 
+
 async def stoplist_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_stoplist()
@@ -158,11 +174,13 @@ async def stoplist_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /stoplist: {e}")
 
+
 async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_text(report_summary()[:4000])
     except Exception as e:
         await update.message.reply_text(f"Ошибка /report: {e}")
+
 
 async def top_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -170,11 +188,13 @@ async def top_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /top: {e}")
 
+
 async def profit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_text(profit_sales()[:4000])
     except Exception as e:
         await update.message.reply_text(f"Ошибка /profit: {e}")
+
 
 async def worst_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -182,11 +202,13 @@ async def worst_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /worst: {e}")
 
+
 async def analysis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_text(sales_analysis()[:4000])
     except Exception as e:
         await update.message.reply_text(f"Ошибка /analysis: {e}")
+
 
 async def excel_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -217,6 +239,7 @@ async def excel_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка загрузки Excel: {e}")
 
+
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_text = update.message.text
@@ -225,6 +248,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(f"Ошибка ассистента: {e}")
+
 
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -247,6 +271,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()

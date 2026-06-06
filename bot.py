@@ -240,10 +240,7 @@ def main():
     app.add_handler(CommandHandler("report", report_command))
     app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CommandHandler("profit", profit_command))
-    app.add_handler(Command
-
-
-Handler("worst", worst_command))
+    app.add_handler(CommandHandler("worst", worst_command))
     app.add_handler(CommandHandler("analysis", analysis_command))
 
     app.add_handler(MessageHandler(filters.Document.FileExtension("xlsx"), excel_upload))

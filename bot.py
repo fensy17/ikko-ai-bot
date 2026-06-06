@@ -7,6 +7,13 @@ load_dotenv()
 
 from ai_agent import ask_agent
 from iiko_api import IikoClient
+from sales_report import (
+    report_summary,
+    top_sales,
+    profit_sales,
+    worst_sales,
+    sales_analysis,
+)
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
@@ -25,8 +32,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/menu — номенклатура\n"
         "/products — товары\n"
         "/search название — поиск товара\n"
-        "/stoplist — стоп-лист\n"
-        "/sales — продажи\n\n"
+        "/stoplist — стоп-лист\n\n"
+        "Отчёты Excel:\n"
+        "/report — общая выручка\n"
+        "/top — топ продаж\n"
+        "/profit — самые прибыльные позиции\n"
+        "/worst — слабые продажи\n"
+        "/analysis — полный анализ\n\n"
         "Также можно писать обычным текстом."
     )
 
@@ -119,7 +131,10 @@ async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /products: {e}")
 
-async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def search_command(update: Update, context: ContextType
+
+
+s.DEFAULT_TYPE):
     try:
         query = " ".join(context.args).strip().lower()
 
@@ -131,9 +146,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         products = data.get("products", [])
 
         found = [
-
-
-item for item in products
+            item for item in products
             if query in item.get("name", "").lower()
         ]
 
@@ -187,15 +200,35 @@ async def stoplist_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка /stoplist: {e}")
 
-async def sales_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Команда /sales пока находится в разработке.\n"
-        "После подключения отчётов iiko здесь будет:\n"
-        "- Выручка за сегодня\n"
-        "- Количество чеков\n"
-        "- Средний чек\n"
-        "- Сравнение с вчерашним днём"
-    )
+async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text(report_summary()[:4000])
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /report: {e}")
+
+async def top_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text(top_sales()[:4000])
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /top: {e}")
+
+async def profit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text(profit_sales()[:4000])
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /profit: {e}")
+
+async def worst_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text(worst_sales()[:4000])
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /worst: {e}")
+
+async def analysis_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await update.message.reply_text(sales_analysis()[:4000])
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка /analysis: {e}")
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -216,7 +249,15 @@ def main():
     app.add_handler(CommandHandler("products", products_command))
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("stoplist", stoplist_command))
-    app.add_handler(CommandHandler("sales", sales_command))
+
+    app.add_handler(CommandHandler("re
+
+
+port", report_command))
+    app.add_handler(CommandHandler("top", top_command))
+    app.add_handler(CommandHandler("profit", profit_command))
+    app.add_handler(CommandHandler("worst", worst_command))
+    app.add_handler(CommandHandler("analysis", analysis_command))
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 

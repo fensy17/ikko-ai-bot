@@ -32,7 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/iiko — проверить подключение\n"
         "/orgs — организации\n"
         "/menu — номенклатура\n"
-        "/products — товары\n"
+        "/products — диагностика номенклатуры\n"
         "/search название — поиск товара\n"
         "/stoplist — стоп-лист\n\n"
         "Отчёты Excel:\n"
@@ -77,8 +77,8 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not products:
             await update.message.reply_text(
                 "Номенклатура не найдена.\n\n"
-                "Cloud API отвечает, но список products пустой.\n"
-                "Проверь настройку «Внешнее меню» в iiko."
+                "Список products пустой.\n"
+                "Для диагностики отправь /products."
             )
             return
 
@@ -101,35 +101,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = iiko.get_nomenclature()
-
-        products = data.get("products", [])
-        categories = data.get("productCategories", [])
-
-        if not products:
-            text = "Товары не найдены.\n\n"
-
-            if categories:
-                text += f"Найдено категорий: {len(categories)}\n\n"
-
-                for category in categories:
-                    text += f"• {category.get('name')}\n"
-
-            text += (
-                "\nCloud API подключен корректно.\n"
-                "Категории загружаются, но позиции меню отсутствуют.\n\n"
-                "Проверь настройку «Внешнее меню» в iiko."
-            )
-
-            await update.message.reply_text(text[:4000])
-            return
-
-        text = f"Найдено товаров: {len(products)}\n\n"
-
-        for item in products[:100]:
-            text += f"• {item.get('name', 'Без названия')}\n"
-
-        if len(products) > 100:
-            text += f"\nПоказано 100 из {len(products)} товаров."
+        text = str(data)
 
         await update.message.reply_text(text[:4000])
 

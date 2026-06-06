@@ -5,7 +5,7 @@ import requests
 class IikoClient:
 
     def __init__(self):
-        self.base_url = "https://api-ru.iiko.services"
+        self.base_url = os.getenv("IIKO_BASE_URL", "https://api-ru.iiko.services")
 
         self.api_key = os.getenv("IIKO_API_KEY")
         self.app_id = os.getenv("IIKO_APP_ID")
@@ -13,6 +13,18 @@ class IikoClient:
         self.org_id = os.getenv("IIKO_ORG_ID")
 
         self.token = None
+
+        if not self.api_key:
+            raise ValueError("Не задан IIKO_API_KEY")
+
+        if not self.app_id:
+            raise ValueError("Не задан IIKO_APP_ID")
+
+        if not self.client_secret:
+            raise ValueError("Не задан IIKO_CLIENT_SECRET")
+
+        if not self.org_id:
+            raise ValueError("Не задан IIKO_ORG_ID")
 
     def get_token(self):
         if self.token:
@@ -55,6 +67,16 @@ class IikoClient:
             timeout=30
         )
 
+        if response.status_code == 401:
+            self.token = None
+
+            response = requests.post(
+                f"{self.base_url}{endpoint}",
+                headers=self.headers(),
+                json=payload or {},
+                timeout=30
+            )
+
         if response.status_code != 200:
             raise Exception(
                 f"Ошибка iiko: {response.status_code}\n{response.text}"
@@ -66,9 +88,6 @@ class IikoClient:
         return self.post("/api/1/organizations")
 
     def get_nomenclature(self):
-        if not self.org_id:
-            raise Exception("Не задан IIKO_ORG_ID")
-
         return self.post(
             "/api/1/nomenclature",
             {
@@ -77,9 +96,6 @@ class IikoClient:
         )
 
     def get_stoplist(self):
-        if not self.org_id:
-            raise Exception("Не задан IIKO_ORG_ID")
-
         return self.post(
             "/api/1/stop_lists",
             {
@@ -88,9 +104,6 @@ class IikoClient:
         )
 
     def get_payment_types(self):
-        if not self.org_id:
-            raise Exception("Не задан IIKO_ORG_ID")
-
         return self.post(
             "/api/1/payment_types",
             {
@@ -99,12 +112,17 @@ class IikoClient:
         )
 
     def get_storages(self):
-        if not self.org_id:
-            raise Exception("Не задан IIKO_ORG_ID")
-
         return self.post(
             "/api/1/warehouses",
             {
                 "organizationId": self.org_id
+            }
+        )
+
+    def get_external_menus(self):
+        return self.post(
+            "/api/2/menu",
+            {
+                "organizationIds": [self.org_id]
             }
         )

@@ -130,9 +130,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         if not found:
-
-
-await update.message.reply_text("Ничего не найдено.")
+            await update.message.reply_text("Ничего не найдено.")
             return
 
         text = f"Найдено по запросу «{query}»: {len(found)}\n\n"

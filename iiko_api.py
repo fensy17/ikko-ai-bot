@@ -16,13 +16,10 @@ class IikoClient:
 
         if not self.api_key:
             raise ValueError("Не задан IIKO_API_KEY")
-
         if not self.app_id:
             raise ValueError("Не задан IIKO_APP_ID")
-
         if not self.client_secret:
             raise ValueError("Не задан IIKO_CLIENT_SECRET")
-
         if not self.org_id:
             raise ValueError("Не задан IIKO_ORG_ID")
 
@@ -69,7 +66,6 @@ class IikoClient:
 
         if response.status_code == 401:
             self.token = None
-
             response = requests.post(
                 f"{self.base_url}{endpoint}",
                 headers=self.headers(),
@@ -95,6 +91,14 @@ class IikoClient:
             }
         )
 
+    def get_cloud_menu(self):
+        return self.post(
+            "/api/2/menu",
+            {
+                "organizationIds": [self.org_id]
+            }
+        )
+
     def get_stoplist(self):
         return self.post(
             "/api/1/stop_lists",
@@ -116,13 +120,5 @@ class IikoClient:
             "/api/1/warehouses",
             {
                 "organizationId": self.org_id
-            }
-        )
-
-    def get_external_menus(self):
-        return self.post(
-            "/api/2/menu",
-            {
-                "organizationIds": [self.org_id]
             }
         )
